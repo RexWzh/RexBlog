@@ -109,4 +109,6 @@ theme_config:
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
-  type: ''
+  type: git
+  branch: main
+  message: 'Site updated: {{ now("yyyy-MM-dd HH:mm:ss") }}'
