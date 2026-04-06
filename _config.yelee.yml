@@ -5,7 +5,7 @@ menu:
   关于我: /about/
 
 author: Rex
-subtitle: Math + Computer = ?
+subtitle: 记录模型产出、实验过程与协作结果
 avatar: https://qiniu.wzhecnu.cn/PicBed5/images_for_blogs/avatar.jpg
 favicon: /img/favicon.png
 root_url:
@@ -35,7 +35,7 @@ animate: true
 jquery_ui: false
 tagcloud: true
 friends: false
-aboutme: 记录数学、编程与折腾。
+aboutme: 记录模型产出、实验过程与长期沉淀。
 
 open_in_new:
   global: 0
