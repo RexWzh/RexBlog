@@ -649,42 +649,6 @@ pre {
   margin: 1.5rem 0;
 }
 
-.expressive-code .frame {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
-  border: 1px solid #e5e7eb !important;
-  border-radius: 8px !important;
-  background: #f8fafc !important;
-}
-
-.expressive-code .header {
-  border-bottom: 1px solid #e5e7eb !important;
-  border-radius: 8px 8px 0 0 !important;
-  background: #e2e8f0 !important;
-  height: 2.5rem;
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-
-.expressive-code .header::before {
-  content: '';
-  display: inline-block;
-  width: 0.75rem;
-  height: 0.75rem;
-  border-radius: 50%;
-  background: #ff5f56;
-  box-shadow: 1.25rem 0 0 #ffbd2e, 2.5rem 0 0 #27c93f;
-  margin-left: 1rem;
-}
-
-.expressive-code pre {
-  border: none !important;
-  border-radius: 0 0 8px 8px !important;
-  margin: 0 !important;
-  padding: 1.5rem !important;
-  background: #f8fafc !important;
-}
-
 /* Fallback Code Blocks (if not processed by Expressive Code) */
 .page-content pre:not(.expressive-code pre) {
   background: var(--bg-inverse) !important;

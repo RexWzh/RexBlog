@@ -1,31 +1,16 @@
 import { defineConfig } from 'astro/config';
+import mdx from '@astrojs/mdx';
+import sitemap from '@astrojs/sitemap';
 import expressiveCode from 'astro-expressive-code';
 
 export default defineConfig({
-  site: 'http://www.wzhecnu.cn',
-  output: 'static',
-  outDir: './public',
-  publicDir: './static',
+  site: 'https://rexblog.example.com', // FIXME: update with real site url
   integrations: [
     expressiveCode({
       themes: ['github-light'],
-      styleOverrides: {
-        borderRadius: '8px',
-        borderWidth: '1px',
-        borderColor: '#e5e7eb',
-        frames: {
-          shadowColor: 'rgba(0, 0, 0, 0.05)',
-          frameBoxShadowCssValue: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
-        },
-        codePaddingInline: '1.5rem',
-        codePaddingBlock: '1.5rem',
-      }
-    })
+      useDarkModeMediaQuery: false,
+    }),
+    mdx(),
+    sitemap()
   ],
-  markdown: {
-    shikiConfig: {
-      theme: 'github-light',
-      wrap: true
-    }
-  }
 });
