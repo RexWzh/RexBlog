@@ -22,7 +22,7 @@ tags:
 
 以下是当前站点的基础配置记录，作为未来迭代的基线参考：
 
-```yaml
+```yaml collapse={1-4}
 # system_config.yml
 framework: Astro
 mode: PRD Driven
