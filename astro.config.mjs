@@ -16,7 +16,9 @@ export default defineConfig({
         frames: {
           shadowColor: 'transparent',
           frameBoxShadowCssValue: '4px 4px 0 var(--text)',
-        }
+        },
+        codePaddingInline: '1.5rem',
+        codePaddingBlock: '1.5rem',
       }
     })
   ],
