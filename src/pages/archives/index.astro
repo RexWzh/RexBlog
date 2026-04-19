@@ -1,0 +1,30 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { formatDate, getArchiveGroups, getPostPermalink } from '../../lib/site.js';
+
+const posts = await getCollection('posts');
+const archiveGroups = getArchiveGroups(posts);
+---
+
+<BaseLayout title="归档" currentPath="/archives/">
+  <section class="panel">
+    <p class="eyebrow">Archives</p>
+    <h1 class="section-title">归档</h1>
+    <p>按年份查看已经迁移到 Astro 内容集合的文章。</p>
+  </section>
+
+  {archiveGroups.map((group) => (
+    <section class="archive-group">
+      <h2>{group.year}</h2>
+      <ol class="archive-list">
+        {group.posts.map((post) => (
+          <li>
+            <span class="post-card__meta">{formatDate(post.data.date)}</span>
+            <a href={getPostPermalink(post)}>{post.data.title}</a>
+          </li>
+        ))}
+      </ol>
+    </section>
+  ))}
+</BaseLayout>

@@ -1,0 +1,24 @@
+---
+import { getEntry, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const page = await getEntry('pages', 'about');
+
+if (!page) {
+  throw new Error('About page content is missing.');
+}
+
+const { Content } = await render(page);
+---
+
+<BaseLayout title={page.data.title} currentPath="/about/">
+  <article class="post-article">
+    <header class="article-header">
+      <p class="article-meta">About</p>
+      <h1>{page.data.title}</h1>
+    </header>
+    <div class="page-content">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

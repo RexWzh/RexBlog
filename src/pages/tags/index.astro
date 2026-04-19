@@ -1,0 +1,25 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getTagMap, getTagPermalink } from '../../lib/site.js';
+
+const tagMap = getTagMap(await getCollection('posts'));
+---
+
+<BaseLayout title="标签" currentPath="/tags/">
+  <section class="tag-cloud">
+    <p class="eyebrow">Tags</p>
+    <h1>标签</h1>
+    <p>保留 Hexo 时代的标签语义，并改为 Astro 站点内统一生成。</p>
+    <ul>
+      {[...tagMap.entries()].map(([tag, posts]) => (
+        <li>
+          <a href={getTagPermalink(tag)}>
+            <span>{tag}</span>
+            <span>{posts.length}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</BaseLayout>

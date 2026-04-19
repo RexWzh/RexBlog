@@ -1,0 +1,25 @@
+---
+import { getCollection } from 'astro:content';
+import PostList from '../components/PostList.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site, sortPosts } from '../lib/site.js';
+
+const posts = sortPosts(await getCollection('posts'));
+---
+
+<BaseLayout>
+  <section class="hero">
+    <p class="eyebrow">AI 试炼场</p>
+    <h1>记录模型产出、实验过程与协作结果。</h1>
+    <p>
+      {site.description} 当前站点已切换到 Astro，继续保留原博客的文章结构、独立页面与可部署输出契约。
+    </p>
+  </section>
+
+  <section class="panel">
+    <p class="eyebrow">最新文章</p>
+    <h2 class="section-title">最近发布</h2>
+  </section>
+
+  <PostList posts={posts} />
+</BaseLayout>

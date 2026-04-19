@@ -1,0 +1,30 @@
+---
+import { formatDate, getPostPermalink, getTagPermalink } from '../lib/site.js';
+
+const { posts, emptyText = '暂无文章。' } = Astro.props;
+---
+
+{posts.length === 0 ? (
+  <p class="empty-state">{emptyText}</p>
+) : (
+  <div class="post-list">
+    {posts.map((post) => (
+      <article class="post-card">
+        <p class="post-card__meta">{formatDate(post.data.date)}</p>
+        <h2>
+          <a href={getPostPermalink(post)}>{post.data.title}</a>
+        </h2>
+        {post.data.description ? <p>{post.data.description}</p> : null}
+        {post.data.tags?.length ? (
+          <ul class="tag-list" aria-label="文章标签">
+            {post.data.tags.map((tag) => (
+              <li>
+                <a href={getTagPermalink(tag)}>{tag}</a>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </article>
+    ))}
+  </div>
+)}

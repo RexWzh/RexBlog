@@ -1,0 +1,27 @@
+---
+import { getCollection } from 'astro:content';
+import PostList from '../../components/PostList.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getTagMap } from '../../lib/site.js';
+
+export async function getStaticPaths() {
+  const tagMap = getTagMap(await getCollection('posts'));
+
+  return [...tagMap.entries()].map(([tag, posts]) => ({
+    params: { tag },
+    props: { tag, posts }
+  }));
+}
+
+const { tag, posts } = Astro.props;
+---
+
+<BaseLayout title={`标签：${tag}`} currentPath="/tags/">
+  <section class="panel">
+    <p class="eyebrow">Tag</p>
+    <h1 class="section-title">{tag}</h1>
+    <p>共 {posts.length} 篇文章。</p>
+  </section>
+
+  <PostList posts={posts} emptyText="这个标签下还没有文章。" />
+</BaseLayout>
