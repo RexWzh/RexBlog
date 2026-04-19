@@ -34,7 +34,7 @@ jobs:
       - name: Deploy main site to gh-pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: public
+          folder: dist
           branch: gh-pages
           clean: true
           clean-exclude: |
