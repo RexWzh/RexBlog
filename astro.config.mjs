@@ -8,14 +8,14 @@ export default defineConfig({
   publicDir: './static',
   integrations: [
     expressiveCode({
-      themes: ['github-dark'],
+      themes: ['github-light'],
       styleOverrides: {
-        borderRadius: '0px',
-        borderWidth: '2px',
-        borderColor: 'var(--text)',
+        borderRadius: '8px',
+        borderWidth: '1px',
+        borderColor: '#e5e7eb',
         frames: {
-          shadowColor: 'transparent',
-          frameBoxShadowCssValue: '4px 4px 0 var(--text)',
+          shadowColor: 'rgba(0, 0, 0, 0.05)',
+          frameBoxShadowCssValue: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
         },
         codePaddingInline: '1.5rem',
         codePaddingBlock: '1.5rem',
