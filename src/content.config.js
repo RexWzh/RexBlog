@@ -9,7 +9,8 @@ const posts = defineCollection({
     permalink: z.string().optional(),
     tags: z.array(z.string()).default([]),
     category: z.string().optional(),
-    categories: z.array(z.string()).default([])
+    categories: z.array(z.string()).default([]),
+    feature: z.boolean().optional().default(false)
   })
 });
 

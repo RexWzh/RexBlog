@@ -20,20 +20,22 @@ const { Content } = await render(post);
 
 <BaseLayout title={post.data.title} description={post.data.description}>
   <article class="post-article">
-    <header class="article-header">
-      <p class="article-meta">{formatLongDate(post.data.date)}</p>
-      <h1>{post.data.title}</h1>
-      {post.data.description ? <p>{post.data.description}</p> : null}
-      {post.data.tags?.length ? (
-        <ul class="tag-list" aria-label="文章标签">
-          {post.data.tags.map((tag) => (
-            <li>
-              <a href={getTagPermalink(tag)}>{tag}</a>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </header>
+    {!post.data.feature && (
+      <header class="article-header">
+        <p class="article-meta">{formatLongDate(post.data.date)}</p>
+        <h1>{post.data.title}</h1>
+        {post.data.description ? <p>{post.data.description}</p> : null}
+        {post.data.tags?.length ? (
+          <ul class="tag-list" aria-label="文章标签">
+            {post.data.tags.map((tag) => (
+              <li>
+                <a href={getTagPermalink(tag)}>{tag}</a>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </header>
+    )}
 
     <div class="page-content">
       <Content />
