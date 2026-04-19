@@ -1,0 +1,64 @@
+<!DOCTYPE html><html lang="zh-Hans"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="围绕多机分支协作、GitHub 同步和博客部署方式，整理一套更适合 AI 试炼场的工作流。"><meta name="generator" content="Astro v5.18.1"><link rel="icon" type="image/png" href="/favicon.png"><title>AI 试炼场的多机协作与部署思路 | AI 试炼场</title><link rel="stylesheet" href="/_astro/_slug_.CdFTbaEY.css"></head> <body> <div class="site-shell"> <header class="site-header"> <div class="site-header__inner"> <a class="site-brand" href="/"> <span class="site-brand__eyebrow">RexBlog</span> <strong>AI 试炼场</strong> </a> <nav class="site-nav" aria-label="主导航"> <a class href="/"> 首页 </a><a class href="/archives/"> 归档 </a><a class href="/tags/"> 标签 </a><a class href="/about/"> 关于 </a> </nav> </div> </header> <main class="page-frame">  <article class="post-article"> <header class="article-header"> <p class="article-meta">2026年4月7日</p> <h1>AI 试炼场的多机协作与部署思路</h1> <p>围绕多机分支协作、GitHub 同步和博客部署方式，整理一套更适合 AI 试炼场的工作流。</p> <ul class="tag-list" aria-label="文章标签"> <li> <a href="/tags/ai/">ai</a> </li><li> <a href="/tags/deployment/">deployment</a> </li><li> <a href="/tags/github/">github</a> </li><li> <a href="/tags/workflow/">workflow</a> </li> </ul> </header> <div class="page-content"> <blockquote>
+<p><code>[SYS.LOG] > Synchronizing workflows across nodes.</code></p>
+</blockquote>
+<p>AI 试炼场后面会持续记录模型生成的网站、文章、实验过程和整理结果，因此内容来源不会只来自一台机器，也不会只来自一个人手工编辑。</p>
+<p>比较自然的演进方式是：多台机器各自产出内容，通过 GitHub 汇总，再由一条受控的发布链路完成部署。</p>
+<h2 id="目标">目标</h2>
+<ul>
+<li>让多台机器都能产出内容并同步到同一个仓库。</li>
+<li>保持服务器不直接暴露给每一台机器。</li>
+<li>让部署入口尽量单一，避免状态漂移。</li>
+<li>保留审查和回滚能力。</li>
+</ul>
+<h2 id="多机协作分支模型">多机协作分支模型</h2>
+<p>一个比较稳的方式是给每台机器一个长期分支，例如：</p>
+<ul>
+<li><code>machine/macbook</code></li>
+<li><code>machine/workstation</code></li>
+<li><code>machine/server-lab</code></li>
+</ul>
+<p>每台机器上的模型产出、草稿整理、配置试验，都先落在自己的分支上。这样做的好处是：</p>
+<ul>
+<li>机器之间不会直接相互覆盖。</li>
+<li>容易追踪某一类内容是在哪台机器上产生的。</li>
+<li>某台机器的试验性改动不会直接污染发布分支。</li>
+</ul>
+<p>真正对外发布时，只允许 <code>main</code> 作为发布源。这样 GitHub 就是唯一的汇总点，服务器不需要面对来自多台机器的直接写入。</p>
+<p>如果后面内容量变大，还可以再加一层约束：</p>
+<ul>
+<li><code>main</code> 只放已经确认可发布的内容。</li>
+<li><code>machine/*</code> 只做同步和草稿。</li>
+<li>需要发布时，通过 PR 或手动 merge 进入 <code>main</code>。</li>
+</ul>
+<h2 id="方案演进与对比">方案演进与对比</h2>
+<h3 id="方案一直连服务器部署-不推荐">方案一：直连服务器部署 (不推荐)</h3>
+<p>这是最直接的方式。每台机器生成静态文件后，直接推到服务器，或者直接 SSH 到服务器执行更新。</p>
+<p><strong>缺陷</strong>：每台机器都要持有服务器凭据，暴露面随着机器数量增长而扩大。很难保证发布入口一致，一旦某台机器状态脏了，可能直接把问题带到线上。</p>
+<h3 id="方案二github-actions-自动部署-当前方案">方案二：GitHub Actions 自动部署 (当前方案)</h3>
+<p>这是静态站点（如当前的 Astro 架构）最自然且受控的方案。</p>
+<p><strong>基本链路</strong>：</p>
+<ol>
+<li>每台机器把内容推到自己的分支。</li>
+<li>需要发布的内容通过 PR 合并到 <code>main</code>。</li>
+<li>GitHub Actions 在 <code>main</code> 更新后执行 <code>npm run build</code>。</li>
+<li>产出物（<code>dist/</code>）自动部署到目标环境（如 GitHub Pages）。</li>
+</ol>
+<p><strong>优势</strong>：</p>
+<ul>
+<li>所有机器都不需要直接接触部署凭据。</li>
+<li>发布入口统一，审计记录清晰。</li>
+<li>回滚、重跑、对比构建结果都比较方便。</li>
+</ul>
+<h3 id="方案三自建推送服务-未来演进">方案三：自建推送服务 (未来演进)</h3>
+<p>服务器上跑一个受控服务，通过鉴权 token 接收发布请求，再触发仓库更新和构建。这适合后续不仅有静态博客，还有需要运行复杂环境的模型产出物时使用。这被视为我们系统的“第二阶段”。</p>
+<h2 id="当前落地方式">当前落地方式</h2>
+<p>由于本站已经彻底迁移至 <strong>Astro</strong> 框架，并且去除了老旧的 Hexo 依赖，我们当前的落地方式非常清晰、轻量：</p>
+<ol>
+<li>多台机器各自使用 <code>machine/*</code> 或 <code>feature/*</code> 分支同步源码内容。</li>
+<li>需要上线的内容通过 PR 提交至 <code>main</code>。</li>
+<li>借助 <strong>GitHub Actions</strong>，当代码合并进 <code>main</code> 分支后，自动执行 Node 构建流。</li>
+<li>构建产出的 <code>dist/</code> 静态资源目录将通过内置的 deploy action，自动发布至 <code>gh-pages</code> 分支。</li>
+</ol>
+<p>这套机制的核心，不再是“怎么把文件传上去”，而是“怎么让多终端模型产出在协作下仍然<strong>可控、可审计、可回滚</strong>”。</p>
+<hr>
+<p><em>End of transmission.</em></p> </div> </article>  </main> <footer class="site-footer"> <p>AI 试炼场</p> <p>记录模型产出、实验过程与协作结果。</p> </footer> </div> </body></html>

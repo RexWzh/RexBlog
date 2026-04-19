@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="zh-Hans"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="基于 Astro 与 GitHub Pages，收敛 RexBlog 的最小部署与多机协作方案。"><meta name="generator" content="Astro v5.18.1"><link rel="icon" type="image/png" href="/favicon.png"><title>RexBlog 部署设计：最小可实现方案 | AI 试炼场</title><link rel="stylesheet" href="/_astro/_slug_.CdFTbaEY.css"></head> <body> <div class="site-shell"> <header class="site-header"> <div class="site-header__inner"> <a class="site-brand" href="/"> <span class="site-brand__eyebrow">RexBlog</span> <strong>AI 试炼场</strong> </a> <nav class="site-nav" aria-label="主导航"> <a class href="/"> 首页 </a><a class href="/archives/"> 归档 </a><a class href="/tags/"> 标签 </a><a class href="/about/"> 关于 </a> </nav> </div> </header> <main class="page-frame">  <article class="post-article"> <header class="article-header"> <p class="article-meta">2026年4月7日</p> <h1>RexBlog 部署设计：最小可实现方案</h1> <p>基于 Astro 与 GitHub Pages，收敛 RexBlog 的最小部署与多机协作方案。</p> <ul class="tag-list" aria-label="文章标签"> <li> <a href="/tags/design/">design</a> </li><li> <a href="/tags/deployment/">deployment</a> </li><li> <a href="/tags/astro/">astro</a> </li><li> <a href="/tags/workflow/">workflow</a> </li> </ul> </header> <div class="page-content"> <blockquote>
+<p><code>[SYS.DEPLOY] > Initializing deployment strategy...</code></p>
+</blockquote>
+<p>这篇文章只讨论一件事：如何给 <code>RexBlog</code> 做一个足够简单、足够安全、并且后面还能继续演进的部署设计。</p>
+<p>随着我们将框架从 Hexo 彻底迁移至 Astro，部署策略也需要随之更新。这里不凭空设计，而是优先参考现代静态站点生成器（SSG）与云原生托管平台的最佳实践。</p>
+<p>目标不是一开始把体系做复杂，而是让这套“PR 驱动”的流程能极度稳定地跑起来。</p>
+<h2 id="核心边界源码与产物的分离">核心边界：源码与产物的分离</h2>
+<p>在过去，很多博客使用者习惯在本地执行构建并强行推送静态文件。现在，我们必须将这两个动作在物理和语义上彻底分开：</p>
+<ul>
+<li><code>git push</code>：只负责同步<strong>源码仓库</strong>（Markdown、组件、配置）。</li>
+<li><code>GitHub Actions</code>：负责在云端执行构建（<code>npm run build</code>），并将生成的静态产物（<code>dist/</code>）发布到托管环境。</li>
+</ul>
+<p>如果这两件事混在一起，一旦引入多机协作或多 Agent 自动生成内容，链路就会发生灾难性的冲突。</p>
+<h2 id="当前确定的最小可用路线">当前确定的最小可用路线</h2>
+<p>基于 Astro 的特性与我们的“多节点/Agent 协作”需求，当前最通用、最可靠的路线是：</p>
+<h3 id="github-pages--github-actions-当前采用">GitHub Pages + GitHub Actions (当前采用)</h3>
+<p>这是 Astro 官方文档直接推荐的第一梯队方式，也是我们目前正在使用的基线方案。</p>
+<p><strong>基本流程</strong>：</p>
+<ol>
+<li>本地或 Agent 将源码 push 到 GitHub 仓库的 <code>main</code> 分支（或通过 PR 合并）。</li>
+<li>GitHub Actions 监听到 <code>main</code> 的变更，启动一个干净的 Node 容器。</li>
+<li>执行 <code>npm ci</code> 安装依赖，执行 <code>npm run build</code> 构建 Astro 站点。</li>
+<li>使用 GitHub 官方的 Deploy Action，将 <code>dist/</code> 目录直接推送到 GitHub Pages 的特殊分支（如 <code>gh-pages</code>）或直接通过 artifact 部署。</li>
+</ol>
+<p><strong>优势</strong>：</p>
+<ul>
+<li><strong>零运维</strong>：不需要自己维护服务器、Nginx 或 SSL 证书。</li>
+<li><strong>绝对干净</strong>：每次构建都在隔离的容器中进行，杜绝了“我本地能跑”的玄学问题。</li>
+<li><strong>天然契合 PRD-Driven</strong>：非常适合 Agent 提交 PR，人类 Review 后 Merge 触发发布的流程。</li>
+</ul>
+<h2 id="其他备选托管平台">其他备选托管平台</h2>
+<p>如果未来我们需要更强的边缘计算能力或预览环境，可以随时无缝迁移至以下平台（Astro 对它们都有官方的第一方集成支持）：</p>
+<h3 id="cloudflare-pages">Cloudflare Pages</h3>
+<p><strong>优势</strong>：全球最快的 CDN 之一，自带极其强大的免费 DDoS 防护，且对 PR 自动生成预览链接（Preview Deployments）的支持最为开箱即用。</p>
+<h3 id="vercel--netlify">Vercel / Netlify</h3>
+<p><strong>优势</strong>：前端领域的行业标杆。如果未来我们的博客需要引入 SSR（服务端渲染）或 Serverless API，这两个平台能提供最平滑的升级体验。</p>
+<h2 id="为什么当前不推荐自建接收端-webhook-server">为什么当前不推荐自建接收端 (Webhook Server)</h2>
+<p>如果在自己的 VPS 上跑一个类似 <code>chattool serve</code> 的服务，通过鉴权 token 接收 GitHub Webhook，再在服务器上 <code>git pull</code> 和构建，虽然听起来很极客，但在当前阶段是<strong>反模式</strong>的。</p>
+<ul>
+<li><strong>徒增复杂度</strong>：你需要自己处理 HTTPS、Token 鉴权、重放攻击防护、Node 环境维护。</li>
+<li><strong>单点故障</strong>：自建服务器挂了，部署就断了。</li>
+<li><strong>违背 Serverless 哲学</strong>：对于纯静态站点，现成的托管平台已经提供了 CDN、HTTPS 和原子化部署，没有理由退回到手动运维的时代。</li>
+</ul>
+<h2 id="workflow-最小化实践">Workflow 最小化实践</h2>
+<p>当前阶段的 Git Workflow 被压缩到了极致的简单：</p>
+<h3 id="1-实验分支-feature--agent-branches">1. 实验分支 (Feature / Agent Branches)</h3>
+<ul>
+<li>任何本地机器或 Agent，都在独立的分支（如 <code>agent/update-post</code>）上工作。</li>
+<li>提交 PR 时，CI 仅做构建检查（Build Check），不执行发布。</li>
+</ul>
+<h3 id="2-主分支-main">2. 主分支 (Main)</h3>
+<ul>
+<li><code>main</code> 分支是被保护的。</li>
+<li>只有合并到 <code>main</code>，才会触发真实的部署流水线，将内容同步到公网。</li>
+</ul>
+<h2 id="本地控制台指令">本地控制台指令</h2>
+<p>开发者或 Agent 在本地进行调试时，只需要掌握最基础的 npm 脚本：</p>
+<div class="expressive-code"><link rel="stylesheet" href="/_astro/ec.0en2h.css"><script type="module" src="/_astro/ec.0vx5m.js"></script><figure class="frame is-terminal"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#616972"># 启动本地响应式预览服务器</span></div></div><div class="ec-line"><div class="code"><span style="--0:#6F42C1">npm</span><span style="--0:#24292E"> </span><span style="--0:#032F62">run</span><span style="--0:#24292E"> </span><span style="--0:#032F62">dev</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#616972"># 运行本地全量构建检查</span></div></div><div class="ec-line"><div class="code"><span style="--0:#6F42C1">npm</span><span style="--0:#24292E"> </span><span style="--0:#032F62">run</span><span style="--0:#24292E"> </span><span style="--0:#032F62">build</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#616972"># 预览构建后的静态产物</span></div></div><div class="ec-line"><div class="code"><span style="--0:#6F42C1">npm</span><span style="--0:#24292E"> </span><span style="--0:#032F62">run</span><span style="--0:#24292E"> </span><span style="--0:#032F62">preview</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="npm run devnpm run buildnpm run preview"><div></div></button></div></figure></div>
+<p>发布不再依赖本地的任何构建动作，一切以云端 CI 的执行结果为准。</p>
+<hr>
+<p><em>End of transmission.</em></p> </div> </article>  </main> <footer class="site-footer"> <p>AI 试炼场</p> <p>记录模型产出、实验过程与协作结果。</p> </footer> </div> </body></html>
