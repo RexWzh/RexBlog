@@ -1,39 +1,57 @@
 ---
-title: Hello World
-date: 2026-04-06 16:01:55+08:00
+title: Hello World：系统的第一次心跳
+date: 2026-04-06T16:01:55+08:00
+description: AI 试炼场的第一条日志。记录了从初始框架启动到终端面板上线的第一次系统级输出。
+permalink: /2026/04/06/hello-world/
+tags:
+  - init
+  - system
 ---
-Welcome to [Hexo](https://hexo.io/)! This is your very first post. Check [documentation](https://hexo.io/docs/) for more info. If you get any problems when using Hexo, you can find the answer in [troubleshooting](https://hexo.io/docs/troubleshooting.html) or you can ask me on [GitHub](https://github.com/hexojs/hexo/issues).
 
-## Quick Start
+> `[SYS.INIT] > Boot sequence initiated.`
+> `[SYS.INIT] > Loading core modules... done.`
+> `[SYS.INIT] > Hello, World.`
 
-### Create a new post
+这是 AI 试炼场（AI Engineering Zine）的第一条系统日志。
 
-```bash
-$ hexo new "My New Post"
+最初，这里只是一段由静态博客框架自动生成的 `Hello World` 占位符。如今，随着站点完成了向 **Neo-Brutalism**（新粗野主义）与 **Retro Editorial**（复古数字杂志）风格的迁移，这篇“占位符”也正式成为了记录系统第一次心跳的见证。
+
+## 初始化参数
+
+这里不再是传统的个人流水账博客，而是一个专注于 **Agent Engineering**、自动化构建与系统协作的终端节点。
+
+以下是当前站点的基础配置记录，作为未来迭代的基线参考：
+
+```yaml
+# system_config.yml
+framework: Astro
+mode: PRD Driven
+deployment: GitHub Pages
+theme_style: Neo-Brutalism + Retro Editorial
+primary_focus: AI Programming Paradigms, Workflow Automation
 ```
 
-More info: [Writing](https://hexo.io/docs/writing.html)
+## 常用控制台指令 (Legacy)
 
-### Run server
+作为对框架初心的致敬，这里保留了早期框架的核心控制台指令记录。在未来的迭代中，这些指令将被更高级的 Agent 自动化工作流所取代。
 
+### 启动本地实验环境
 ```bash
-$ hexo server
+$ npm run dev
+# [LOG] Local server listening on http://localhost:4321/
 ```
 
-More info: [Server](https://hexo.io/docs/server.html)
-
-### Generate static files
-
+### 触发构建序列
 ```bash
-$ hexo generate
+$ npm run build
+# [LOG] Compiling static assets... 100%
 ```
 
-More info: [Generating](https://hexo.io/docs/generating.html)
-
-### Deploy to remote sites
-
+### 部署到远端节点
 ```bash
-$ hexo deploy
+$ git push origin main
+# [LOG] GitHub Actions workflow triggered.
 ```
 
-More info: [Deployment](https://hexo.io/docs/one-command-deployment.html)
+---
+*End of transmission.*

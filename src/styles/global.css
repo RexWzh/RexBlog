@@ -644,10 +644,54 @@ pre {
   padding: 0.25rem 0 0.25rem 1rem;
 }
 
+/* Code Blocks - Terminal Style */
 .page-content pre {
-  border-radius: 1rem;
+  background: var(--bg-inverse) !important;
+  color: var(--text-inverse) !important;
+  border: 2px solid var(--text);
+  box-shadow: 4px 4px 0 var(--text);
+  border-radius: 0;
+  padding: 2.5rem 1.5rem 1.5rem;
+  margin: 2rem 0;
+  position: relative;
   overflow-x: auto;
-  padding: 1rem;
+}
+
+/* 覆盖 Astro 默认的 syntax highlighting 颜色，确保在深色背景上可读 */
+.page-content pre code {
+  color: var(--text-inverse) !important;
+}
+
+.page-content pre code span {
+  color: inherit !important;
+}
+
+.page-content pre::before {
+  content: '';
+  position: absolute;
+  top: 0.8rem;
+  left: 1rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  background: #ff5f56;
+  box-shadow: 1.5rem 0 0 #ffbd2e, 3rem 0 0 #27c93f;
+}
+
+.page-content code {
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.page-content p code,
+.page-content li code {
+  background: var(--surface-border);
+  color: var(--text);
+  padding: 0.2em 0.4em;
+  border: 1px solid var(--text);
+  font-size: 0.85em;
+  font-weight: 600;
 }
 
 .page-content .feature-article {
