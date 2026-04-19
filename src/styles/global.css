@@ -644,8 +644,47 @@ pre {
   padding: 0.25rem 0 0.25rem 1rem;
 }
 
-/* Code Blocks - Terminal Style */
-.page-content pre {
+/* --- Expressive Code Overrides --- */
+.expressive-code {
+  margin: 1.5rem 0;
+}
+
+.expressive-code .frame {
+  box-shadow: 4px 4px 0 var(--text) !important;
+  border: 2px solid var(--text) !important;
+  border-radius: 0 !important;
+}
+
+.expressive-code .header {
+  border-bottom: 2px solid var(--text) !important;
+  border-radius: 0 !important;
+  background: var(--bg-inverse) !important;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.expressive-code .header::before {
+  content: '';
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: #ff5f56;
+  box-shadow: 1.2rem 0 0 #ffbd2e, 2.4rem 0 0 #27c93f;
+  margin-left: 1rem;
+}
+
+.expressive-code pre {
+  border: none !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 1rem !important;
+}
+
+/* Fallback Code Blocks (if not processed by Expressive Code) */
+.page-content pre:not(.expressive-code pre) {
   background: var(--bg-inverse) !important;
   color: var(--text-inverse) !important;
   border: 2px solid var(--text);
@@ -657,16 +696,16 @@ pre {
   overflow-x: auto;
 }
 
-/* 覆盖 Astro 默认的 syntax highlighting 颜色，确保在深色背景上可读 */
-.page-content pre code {
-  color: var(--text-inverse) !important;
-}
-
-.page-content pre code span {
+/* 修复由于 !important 强制覆盖颜色导致的语法高亮丢失问题 */
+.page-content pre:not(.expressive-code pre) code {
   color: inherit !important;
 }
 
-.page-content pre::before {
+.page-content pre:not(.expressive-code pre) code span {
+  color: inherit !important;
+}
+
+.page-content pre:not(.expressive-code pre)::before {
   content: '';
   position: absolute;
   top: 0.8rem;
