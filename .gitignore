@@ -7,3 +7,4 @@ public/
 .astro/
 .deploy*/
 _multiconfig.yml
+/dist/
