@@ -41,10 +41,10 @@ jobs:
       - name: Deploy PR preview
         uses: rossjrw/pr-preview-action@v1
         with:
-          source-dir: ./public/
+          source-dir: ./dist/
           preview-branch: gh-pages
           umbrella-dir: pr-preview
           action: auto
           comment: true
           qr-code: false
-          wait-for-pages-deployment: true
+          wait-for-pages-deployment: false

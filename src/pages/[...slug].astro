@@ -1,0 +1,44 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { formatLongDate, getPostPermalink, getTagPermalink } from '../lib/site.js';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+
+  return posts.map((post) => ({
+    params: {
+      slug: getPostPermalink(post).replace(/^\//, '').replace(/\/$/, '')
+    },
+    props: { post }
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<BaseLayout title={post.data.title} description={post.data.description}>
+  <article class="post-article">
+    {!post.data.feature && (
+      <header class="article-header">
+        <p class="article-meta">{formatLongDate(post.data.date)}</p>
+        <h1>{post.data.title}</h1>
+        {post.data.description ? <p>{post.data.description}</p> : null}
+        {post.data.tags?.length ? (
+          <ul class="tag-list" aria-label="文章标签">
+            {post.data.tags.map((tag) => (
+              <li>
+                <a href={getTagPermalink(tag)}>{tag}</a>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </header>
+    )}
+
+    <div class="page-content">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

@@ -1,0 +1,116 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { formatDate, getPostPermalink, getTagMap, getTagPermalink, site, sortPosts } from '../lib/site.js';
+
+const posts = sortPosts(await getCollection('posts'));
+const featuredPosts = posts.filter(post => post.data.feature).slice(0, 3);
+if (featuredPosts.length === 0) {
+  featuredPosts.push(...posts.slice(0, 3));
+}
+const latestPosts = posts.slice(0, 6);
+const tagMap = getTagMap(posts);
+const hotTags = [...tagMap.entries()].slice(0, 8);
+
+function getGradient(title) {
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) {
+    hash = title.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h1 = Math.abs(hash % 360);
+  const h2 = Math.abs((hash * 2) % 360);
+  return `linear-gradient(135deg, hsl(${h1}, 30%, 85%), hsl(${h2}, 30%, 90%))`;
+}
+---
+
+<BaseLayout>
+  <div class="home-intro">
+    <h1>构建、实验、迭代</h1>
+    <p>{site.description} 专注于 Agent Engineering、自动化构建与系统协作，兼具实验档案与极客刊物属性。</p>
+  </div>
+
+  <section class="home-slider-section">
+    <div class="section-header">
+      <h2>精选专题</h2>
+      <a href="/archives/" class="section-more">全部归档 &rarr;</a>
+    </div>
+    
+    <div class="slider-container">
+      {featuredPosts.map((post) => (
+        <a href={getPostPermalink(post)} class="slider-card">
+          <div class="slider-card__image" style={{ background: getGradient(post.data.title) }}>
+            <div class="slider-card__badge">Featured</div>
+          </div>
+          <div class="slider-card__content">
+            <div class="slider-card__meta">
+              <span class="date">{formatDate(post.data.date)}</span>
+            </div>
+            <h3 class="slider-card__title">{post.data.title}</h3>
+            {post.data.description && <p class="slider-card__desc">{post.data.description}</p>}
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <div class="home-grid">
+    <main class="home-main">
+      <div class="section-header">
+        <h2>最新发布</h2>
+      </div>
+      <div class="post-feed">
+        {latestPosts.map((post) => (
+          <article class="feed-item">
+            <a href={getPostPermalink(post)} class="feed-item__link">
+              <div class="feed-item__image" style={{ background: getGradient(post.data.title + 'salt') }}></div>
+              <div class="feed-item__content">
+                <div class="feed-item__meta">
+                  <span class="date">{formatDate(post.data.date)}</span>
+                  {post.data.tags?.[0] && <span class="tag">{post.data.tags[0]}</span>}
+                </div>
+                <h3 class="feed-item__title">{post.data.title}</h3>
+                {post.data.description && <p class="feed-item__desc">{post.data.description}</p>}
+              </div>
+            </a>
+          </article>
+        ))}
+      </div>
+    </main>
+
+    <aside class="home-sidebar">
+      <div class="sidebar-widget">
+        <h3 class="widget-title">主题索引</h3>
+        <div class="tag-cloud-mini">
+          {hotTags.map(([tag, tagPosts]) => (
+            <a href={getTagPermalink(tag)} class="tag-chip-mini">
+              <span class="name">{tag}</span>
+              <span class="count">{tagPosts.length}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+      
+      <div class="sidebar-widget">
+        <h3 class="widget-title">系统状态</h3>
+        <ul class="status-list">
+          <li>
+            <span class="label">Framework</span>
+            <span class="value">Astro</span>
+          </li>
+          <li>
+            <span class="label">Deploy</span>
+            <span class="value">GitHub Pages</span>
+          </li>
+          <li>
+            <span class="label">Mode</span>
+            <span class="value">PRD Driven</span>
+          </li>
+          <li>
+            <span class="label">Posts</span>
+            <span class="value">{posts.length}</span>
+          </li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</BaseLayout>
