@@ -1,0 +1,421 @@
+<!DOCTYPE html><html lang="zh-Hans"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="面向当前版本的 ChatLoop，用最小闭环讲清楚：启动前要准备什么、命令分别做什么、怎么判断 loop 真的在工作，以及常见日志标题到底代表什么。"><meta name="generator" content="Astro v5.18.1"><link rel="icon" type="image/png" href="/favicon.png"><title>ChatLoop 使用指南：怎么启动、怎么判断生效、怎么看日志 | AI 试炼场</title><link rel="stylesheet" href="/_astro/_slug_.CdFTbaEY.css"></head> <body> <div class="site-shell"> <header class="site-header"> <div class="site-header__inner"> <a class="site-brand" href="/"> <span class="site-brand__eyebrow">RexBlog</span> <strong>AI 试炼场</strong> </a> <nav class="site-nav" aria-label="主导航"> <a class href="/"> 首页 </a><a class href="/archives/"> 归档 </a><a class href="/tags/"> 标签 </a><a class href="/about/"> 关于 </a> </nav> </div> </header> <main class="page-frame">  <article class="post-article">  <div class="page-content"> <blockquote>
+<p><code>[LOOP.STATUS] > Project resolved.</code>
+<code>[LOOP.STATUS] > PRD contract injected.</code>
+<code>[LOOP.STATUS] > Waiting for the next idle checkpoint.</code></p>
+</blockquote>
+<p>如果你第一次接触当前版 <code>chatloop</code>，最容易踩的坑不是“命令不会用”，而是：</p>
+<ul>
+<li>以为启动成功就代表 loop 已经在稳定运行</li>
+<li>以为模型写了 <code>DONE</code>，插件就一定会停</li>
+<li>看到一长串日志标题，却不知道哪些是正常现象，哪些才是真问题</li>
+</ul>
+<p>所以这篇文章不讲历史演进，只讲当前版本：</p>
+<ol>
+<li><strong>怎么用</strong></li>
+<li><strong>怎么判断它是否真的生效</strong></li>
+<li><strong>怎么读懂 <code>chatloop.events.log</code></strong></li>
+</ol>
+<h2 id="一chatloop-当前版到底是什么">一、ChatLoop 当前版到底是什么</h2>
+<p>当前版 <code>chatloop</code> 是一个 <strong>PRD-aware 的自动续推插件</strong>。</p>
+<p>它的核心行为是：</p>
+<ul>
+<li>要求当前目录本身直接存在 <code>PRD.md</code></li>
+<li>把当前目录视为当前 project root</li>
+<li>在启动首轮就注入 PRD contract，而不是裸转发用户消息</li>
+<li>当 session 进入 idle 后，自动继续下一轮</li>
+<li>要求每轮输出结构化进度：
+<ul>
+<li><code>## Completed</code></li>
+<li><code>## Next Steps</code></li>
+<li><code>STATUS: IN_PROGRESS</code> / <code>STATUS: COMPLETE</code></li>
+</ul>
+</li>
+<li>只有在 completion gate 真正通过时才停止</li>
+</ul>
+<p>换句话说，<code>chatloop</code> 现在不只是“帮你多发一条 prompt”，而是一套围绕 <code>PRD.md</code> 运转的小状态机。</p>
+<h2 id="二使用前要准备什么">二、使用前要准备什么</h2>
+<p>最少需要：</p>
+<div class="expressive-code"><link rel="stylesheet" href="/_astro/ec.0en2h.css"><script type="module" src="/_astro/ec.0vx5m.js"></script><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">PRD.md</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="PRD.md"><div></div></button></div></figure></div>
+<p>可选但推荐：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">memory.md</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e">progress.md</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="memory.mdprogress.md"><div></div></button></div></figure></div>
+<p>其中：</p>
+<ul>
+<li><code>PRD.md</code> 是主入口</li>
+<li><code>memory.md</code> 是局部上下文</li>
+<li><code>progress.md</code> 是阶段进展</li>
+</ul>
+<p>如果当前目录本身没有 <code>PRD.md</code>，<code>chatloop</code> 就不会真正工作。</p>
+<h2 id="三最小正确用法">三、最小正确用法</h2>
+<h3 id="1-先确认当前-project-解析对不对">1. 先确认当前 project 解析对不对</h3>
+<p>执行：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">/chatloop-project</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="/chatloop-project"><div></div></button></div></figure></div>
+<p>这个命令会直接告诉你：</p>
+<ul>
+<li><code>Project root</code></li>
+<li><code>PRD entry</code></li>
+<li><code>State file</code></li>
+<li><code>Events file</code></li>
+<li><code>Active</code></li>
+<li><code>Iteration</code></li>
+<li><code>Mode</code></li>
+</ul>
+<p>如果这里的 <code>Project root</code> 或 <code>PRD entry</code> 就不对，后面 loop 一定也不对。</p>
+<h3 id="2-再启动-loop">2. 再启动 loop</h3>
+<p>最常见的普通模式：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">/chatloop 按当前 PRD 推进任务。必要时参考 memory.md 和 progress.md；每轮输出 ## Completed、## Next Steps 和 STATUS: IN_PROGRESS / STATUS: COMPLETE。</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="/chatloop 按当前 PRD 推进任务。必要时参考 memory.md 和 progress.md；每轮输出 ## Completed、## Next Steps 和 STATUS: IN_PROGRESS / STATUS: COMPLETE。"><div></div></button></div></figure></div>
+<p>如果你要更接近 Ralph Loop 的 refresh-session 风格：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">/chatloop-ralph 按当前 PRD 推进任务。必要时参考 memory.md 和 progress.md；每轮输出 ## Completed、## Next Steps 和 STATUS: IN_PROGRESS / STATUS: COMPLETE。</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="/chatloop-ralph 按当前 PRD 推进任务。必要时参考 memory.md 和 progress.md；每轮输出 ## Completed、## Next Steps 和 STATUS: IN_PROGRESS / STATUS: COMPLETE。"><div></div></button></div></figure></div>
+<p>两者区别很简单：</p>
+<ul>
+<li><code>/chatloop</code>
+<ul>
+<li>continuation 发生在同一个 session</li>
+</ul>
+</li>
+<li><code>/chatloop-ralph</code>
+<ul>
+<li>每次 continuation 都创建一个新的 session，并把 TUI 切到那个新 session</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-如果当前任务完成要整理给下一轮需求讨论">3. 如果当前任务完成，要整理给下一轮需求讨论</h3>
+<p>执行：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">/chatloop-next</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="/chatloop-next"><div></div></button></div></figure></div>
+<p>它会引导模型做这些事：</p>
+<ul>
+<li>把当前任务长期输出收口到 project 内 <code>reference/</code></li>
+<li>更新 <code>memory.md</code></li>
+<li>更新 <code>progress.md</code></li>
+<li>把 <code>PRD.md</code> 整理成下一轮讨论入口</li>
+</ul>
+<p>这个命令不是继续 loop，而是<strong>整理交接面</strong>。</p>
+<h2 id="四当前版本的重要规则">四、当前版本的重要规则</h2>
+<h3 id="1-首轮-bootstrap-不允许直接完成">1. 首轮 bootstrap 不允许直接完成</h3>
+<p>这是当前版非常关键的一条。</p>
+<p>bootstrap 首轮：</p>
+<ul>
+<li>必须使用 <code>STATUS: IN_PROGRESS</code></li>
+<li>不允许 <code>STATUS: COMPLETE</code></li>
+<li>不允许 <code>&#x3C;complete>DONE&#x3C;/complete></code></li>
+</ul>
+<p>原因很直接：</p>
+<p>很多模型一上来会条件反射地先做一个“总结式完成”输出。如果首轮就允许完成，loop 基本等于没有启动。</p>
+<h3 id="2-completion-gate-不是只看-done">2. completion gate 不是只看 <code>DONE</code></h3>
+<p>当前停止条件不是只看：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">&#x3C;complete>DONE&#x3C;/complete></span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="<complete>DONE</complete>"><div></div></button></div></figure></div>
+<p>还要同时满足：</p>
+<ul>
+<li>有 <code>STATUS: COMPLETE</code></li>
+<li>没有 <code>STATUS: IN_PROGRESS</code></li>
+<li><code>## Next Steps</code> 里没有未完成的 <code>- [ ]</code></li>
+<li>不是 bootstrap 首轮</li>
+</ul>
+<p>所以模型“口头上说完成了”，不代表插件就会接受。</p>
+<h2 id="五怎么判断它真的生效了">五、怎么判断它真的生效了</h2>
+<p>最稳的判断方式有三层。</p>
+<h3 id="第一层看命令级信息">第一层：看命令级信息</h3>
+<ul>
+<li><code>/chatloop-project</code>
+<ul>
+<li>看 project / PRD / 文件路径</li>
+</ul>
+</li>
+<li><code>/chatloop-status</code>
+<ul>
+<li>看 loop 状态和最近一次 lifecycle 结果</li>
+</ul>
+</li>
+</ul>
+<p>当前版 <code>/chatloop-status</code> 现在至少能告诉你：</p>
+<ul>
+<li><code>State active flag</code></li>
+<li><code>Armed for continuation</code></li>
+<li><code>Iteration</code></li>
+<li><code>Structured next steps pending</code></li>
+<li><code>Last lifecycle event</code></li>
+<li><code>Last lifecycle reason</code></li>
+<li><code>Mode</code></li>
+</ul>
+<p>这已经比早期版本可用很多了。</p>
+<h3 id="第二层看状态文件">第二层：看状态文件</h3>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">.opencode/chatloop.local.md</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code=".opencode/chatloop.local.md"><div></div></button></div></figure></div>
+<p>它会保留当前 loop 的关键信息：</p>
+<ul>
+<li>active</li>
+<li>sessionId</li>
+<li>projectPath</li>
+<li>iteration</li>
+<li>maxIterations</li>
+<li>mode</li>
+<li>lastEvent</li>
+<li>lastReason</li>
+</ul>
+<h3 id="第三层看事件日志">第三层：看事件日志</h3>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">.opencode/chatloop.events.log</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code=".opencode/chatloop.events.log"><div></div></button></div></figure></div>
+<p>这是最底层的事件流，也是最终 source of truth。</p>
+<h2 id="六常见日志标题是什么意思">六、常见日志标题是什么意思</h2>
+<p>下面这些 title 是最常见的，你只要先认识它们，绝大多数排查都会轻松很多。</p>
+<h3 id="chatloopstartprompt"><code>chatloop.start.prompt</code></h3>
+<p>表示：</p>
+<ul>
+<li>loop 已经开始构造 bootstrap prompt</li>
+<li>当前 project 和 <code>PRD.md</code> 已经解析成功</li>
+</ul>
+<p>例如你贴的这条：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">2026-04-19T21:21:51.520Z | INFO  | chatloop.start.prompt | session=... | mode=bootstrap prd=/path/to/PRD.md original_task=yes</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="2026-04-19T21:21:51.520Z | INFO  | chatloop.start.prompt | session=... | mode=bootstrap prd=/path/to/PRD.md original_task=yes"><div></div></button></div></figure></div>
+<p>重点看三个字段：</p>
+<ul>
+<li><code>mode=bootstrap</code>
+<ul>
+<li>说明这是首轮启动，不是 continuation</li>
+</ul>
+</li>
+<li><code>prd=.../PRD.md</code>
+<ul>
+<li>说明当前注入的是哪个 <code>PRD.md</code></li>
+</ul>
+</li>
+<li><code>original_task=yes</code>
+<ul>
+<li>说明你执行 <code>/chatloop ...</code> 时确实传入了原始任务文本</li>
+</ul>
+</li>
+</ul>
+<p>如果你这里看到的不是 <code>PRD.md</code>，而是旧的 <code>task.md</code> / <code>review.md</code>，那通常说明你跑到的不是当前插件版本。</p>
+<h3 id="chatloopstartprompt_sent"><code>chatloop.start.prompt_sent</code></h3>
+<p>表示：</p>
+<ul>
+<li>bootstrap prompt 已经真正发给当前 session</li>
+</ul>
+<p>这比单纯的 <code>chatloop.start</code> 更接近“首轮已经真的启动”。</p>
+<h3 id="chatloopobservesessionstatus"><code>chatloop.observe.session.status</code></h3>
+<p>表示：</p>
+<ul>
+<li>插件观察到了 session 状态变化</li>
+</ul>
+<p>例如：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">chatloop.observe.session.status | status=idle</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e">chatloop.observe.session.status | status=busy</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="chatloop.observe.session.status | status=idlechatloop.observe.session.status | status=busy"><div></div></button></div></figure></div>
+<p>这不是 continuation 本身，而是“续跑前的状态观察”。</p>
+<h3 id="chatloopobservesessionidle"><code>chatloop.observe.session.idle</code></h3>
+<p>表示：</p>
+<ul>
+<li>OpenCode 发来了 <code>session.idle</code> 事件</li>
+</ul>
+<p>这通常意味着：</p>
+<ul>
+<li>模型本轮停下来了</li>
+<li>插件准备判断要不要继续</li>
+</ul>
+<h3 id="chatloopidleobserve"><code>chatloop.idle.observe</code></h3>
+<p>表示：</p>
+<ul>
+<li>插件已经开始处理一次 idle checkpoint</li>
+<li>会顺手打印：
+<ul>
+<li>当前是否 active</li>
+<li>session 是否匹配</li>
+<li>当前 iteration</li>
+</ul>
+</li>
+</ul>
+<h3 id="chatloopidleskip"><code>chatloop.idle.skip</code></h3>
+<p>表示：</p>
+<ul>
+<li>这次 idle 没有真正触发 continuation</li>
+</ul>
+<p>常见 reason：</p>
+<ul>
+<li><code>handler_busy</code>
+<ul>
+<li>双 idle 事件同时来了，但已有一个 handler 在处理，这通常是正常现象</li>
+</ul>
+</li>
+<li><code>inactive_state</code>
+<ul>
+<li>当前 state 已经不是 active</li>
+</ul>
+</li>
+<li><code>session_mismatch</code>
+<ul>
+<li>当前事件 session 和 state 里登记的 session 不一致</li>
+</ul>
+</li>
+<li><code>debounced</code>
+<ul>
+<li>太近了，被 debounce 掉</li>
+</ul>
+</li>
+<li><code>session_not_idle</code>
+<ul>
+<li>再查一次发现 session 其实还没真的 idle</li>
+</ul>
+</li>
+</ul>
+<h3 id="chatloopidlelast_text"><code>chatloop.idle.last_text</code></h3>
+<p>表示：</p>
+<ul>
+<li>插件已经把最近一次 assistant 文本拉回来了</li>
+<li>接下来会用它来：
+<ul>
+<li>提取 <code>Completed</code></li>
+<li>提取 <code>Next Steps</code></li>
+<li>判断 completion 是否有效</li>
+</ul>
+</li>
+</ul>
+<h3 id="chatloopstateupdated"><code>chatloop.state.updated</code></h3>
+<p>表示：</p>
+<ul>
+<li>state 已经推进到下一轮</li>
+</ul>
+<p>你会看到类似：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">iteration=3/20 completed=yes next_steps=yes</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="iteration=3/20 completed=yes next_steps=yes"><div></div></button></div></figure></div>
+<p>这说明：</p>
+<ul>
+<li>loop 真正在往前走</li>
+<li>而不是只是空观察</li>
+</ul>
+<h3 id="chatloopidle"><code>chatloop.idle</code></h3>
+<p>表示：</p>
+<ul>
+<li>continuation prompt 即将发送</li>
+</ul>
+<p>例如：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">chatloop.idle | source=session.status sending continuation iteration=3</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="chatloop.idle | source=session.status sending continuation iteration=3"><div></div></button></div></figure></div>
+<p>这是最关键的一条之一，因为它意味着：</p>
+<ul>
+<li>插件决定继续跑了</li>
+</ul>
+<h3 id="chatloopidleprompt_sent"><code>chatloop.idle.prompt_sent</code></h3>
+<p>表示：</p>
+<ul>
+<li>continuation prompt 已经真正发出</li>
+</ul>
+<p>如果你看到了：</p>
+<ul>
+<li><code>chatloop.state.updated</code></li>
+<li><code>chatloop.idle</code></li>
+<li><code>chatloop.idle.prompt_sent</code></li>
+</ul>
+<p>那基本可以认定：</p>
+<ul>
+<li>这一轮 continuation 已经生效</li>
+</ul>
+<h3 id="chatloopcompleterejected"><code>chatloop.complete.rejected</code></h3>
+<p>表示：</p>
+<ul>
+<li>模型看起来像完成了</li>
+<li>但 completion gate 没接受</li>
+</ul>
+<p>常见 reason：</p>
+<ul>
+<li><code>missing completion tag</code></li>
+<li><code>missing STATUS: COMPLETE</code></li>
+<li><code>STATUS: IN_PROGRESS contradicts completion</code></li>
+<li><code>unchecked next steps remain</code></li>
+<li><code>bootstrap iteration cannot complete</code></li>
+</ul>
+<p>这条日志非常重要，因为它通常就是“为什么明明 DONE 了还在继续跑”的直接答案。</p>
+<h3 id="chatloopcomplete"><code>chatloop.complete</code></h3>
+<p>表示：</p>
+<ul>
+<li>这次 completion gate 通过了</li>
+<li>state 会被清掉</li>
+<li>loop 将停止</li>
+</ul>
+<h3 id="chatloopmax_iterations"><code>chatloop.max_iterations</code></h3>
+<p>表示：</p>
+<ul>
+<li>不是任务自然完成</li>
+<li>而是到达了上限轮次后被强制停下</li>
+</ul>
+<h3 id="chatlooppause"><code>chatloop.pause</code></h3>
+<p>表示：</p>
+<ul>
+<li>loop 被错误或异常暂停</li>
+</ul>
+<p>当前最常见来源是：</p>
+<ul>
+<li><code>session.error</code></li>
+</ul>
+<h3 id="chatloopobservemessageparttool"><code>chatloop.observe.message.part.tool</code></h3>
+<p>你提到的这一类：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">chatloop.observe.message.part.tool</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="chatloop.observe.message.part.tool"><div></div></button></div></figure></div>
+<p>它不是 loop 控制事件，而是<strong>模型这一轮里调用 tool 的底层观测日志</strong>。</p>
+<p>它通常会告诉你：</p>
+<ul>
+<li>调用了哪个 tool</li>
+<li>当前状态是：
+<ul>
+<li><code>pending</code></li>
+<li><code>running</code></li>
+<li><code>completed</code></li>
+</ul>
+</li>
+</ul>
+<p>例如：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">chatloop.observe.message.part.tool | tool=read status=running</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="chatloop.observe.message.part.tool | tool=read status=running"><div></div></button></div></figure></div>
+<p>这表示：</p>
+<ul>
+<li>模型这轮正在执行 <code>read</code></li>
+<li>并不表示 loop 自己出问题了</li>
+</ul>
+<p>所以：</p>
+<ul>
+<li><code>chatloop.observe.*</code> 更偏<strong>观测层</strong></li>
+<li><code>chatloop.idle / complete / max_iterations / pause</code> 更偏<strong>状态机层</strong></li>
+</ul>
+<h2 id="七普通模式和-ralph-模式怎么选">七、普通模式和 Ralph 模式怎么选</h2>
+<h3 id="chatloop"><code>/chatloop</code></h3>
+<p>适合：</p>
+<ul>
+<li>你希望在同一个 session 里持续推进</li>
+<li>想保留当前会话的上下文连续性</li>
+</ul>
+<h3 id="chatloop-ralph"><code>/chatloop-ralph</code></h3>
+<p>适合：</p>
+<ul>
+<li>你想要更接近 Ralph Loop 的 refresh 风格</li>
+<li>希望每一轮 continuation 都切到一个新的 session</li>
+</ul>
+<p>它更接近“每轮重新开机再继续”，而不是“在一个会话里无限拉长”。</p>
+<h2 id="八最小推荐调试顺序">八、最小推荐调试顺序</h2>
+<p>如果你只想记住一套最实用的顺序，就按这个来：</p>
+<ol>
+<li>先看：</li>
+</ol>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">/chatloop-project</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="/chatloop-project"><div></div></button></div></figure></div>
+<ol start="2">
+<li>再启动：</li>
+</ol>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">/chatloop 按当前 PRD 推进任务</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="/chatloop 按当前 PRD 推进任务"><div></div></button></div></figure></div>
+<p>或：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">/chatloop-ralph 按当前 PRD 推进任务</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="/chatloop-ralph 按当前 PRD 推进任务"><div></div></button></div></figure></div>
+<ol start="3">
+<li>如果过程异常，再看：</li>
+</ol>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">/chatloop-status</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="/chatloop-status"><div></div></button></div></figure></div>
+<ol start="4">
+<li>还不清楚，就直接读：</li>
+</ol>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e">.opencode/chatloop.events.log</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code=".opencode/chatloop.events.log"><div></div></button></div></figure></div>
+<p>重点先找：</p>
+<ul>
+<li><code>chatloop.start.prompt</code></li>
+<li><code>chatloop.start.prompt_sent</code></li>
+<li><code>chatloop.idle</code></li>
+<li><code>chatloop.idle.prompt_sent</code></li>
+<li><code>chatloop.complete.rejected</code></li>
+<li><code>chatloop.complete</code></li>
+</ul>
+<h2 id="九结语">九、结语</h2>
+<p>当前版本的 <code>chatloop</code>，最值得用的地方，不是“它会不会自己无限跑”，而是：</p>
+<ul>
+<li>它已经围绕 <code>PRD.md</code> 建起了一套明确的工作入口</li>
+<li>它开始拥有能解释自己行为的日志和状态</li>
+<li>它不再只是“有一个命令”，而是开始变成一台可观测、可判断、可收敛的 loop 机器</li>
+</ul>
+<p>而真正让它用起来顺手的关键，并不是再多记几个命令，而是学会看懂这几条日志标题。</p>
+<p>因为从那一刻开始，你看到的就不再是一堆“奇怪的 DEBUG 输出”，而是一台正在工作的系统。</p>
+<hr>
+<p><em>End of transmission.</em></p> </div> </article>  </main> <footer class="site-footer"> <p>AI 试炼场</p> <p>记录模型产出、实验过程与协作结果。</p> </footer> </div> </body></html>
