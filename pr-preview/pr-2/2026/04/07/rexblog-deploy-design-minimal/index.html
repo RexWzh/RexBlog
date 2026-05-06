@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="Rex" />
+
+
+
+<meta name="description" content="基于 Hexo、GitHub Pages、Cloudflare Pages、Netlify 官方资料，收敛 RexBlog 的最小部署方案。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RexBlog 部署设计：最小可实现方案">
+<meta property="og:url" content="http://www.wzhecnu.cn/2026/04/07/rexblog-deploy-design-minimal/index.html">
+<meta property="og:site_name" content="AI 试炼场">
+<meta property="og:description" content="基于 Hexo、GitHub Pages、Cloudflare Pages、Netlify 官方资料，收敛 RexBlog 的最小部署方案。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2026-04-07T17:35:00.000Z">
+<meta property="article:modified_time" content="2026-05-06T21:47:33.380Z">
+<meta property="article:author" content="Rex">
+<meta property="article:tag" content="deployment">
+<meta property="article:tag" content="design">
+<meta property="article:tag" content="hexo">
+<meta property="article:tag" content="workflow">
+<meta name="twitter:card" content="summary">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="AI 试炼场" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/img/favicon.png">
+
+
+
+    <link href="https://cdn.jsdelivr.net/npm/animate.css@3.7.2/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="https://cdn.jsdelivr.net/npm/fancybox@2.1.7/source/jquery.fancybox.css" rel="stylesheet">
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+
+<link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>RexBlog 部署设计：最小可实现方案 | AI 试炼场</title>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@2.2.4/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "https://cdn.jsdelivr.net/npm/fancybox@2.1.7/source/jquery.fancybox.pack.js",
+        scrollreveal: "https://cdn.jsdelivr.net/npm/scrollreveal@3.4.0/dist/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script> yiliaConfig.jquery_ui = [false]; </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+<meta name="generator" content="Hexo 8.1.2"></head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="https://qiniu.wzhecnu.cn/PicBed5/images_for_blogs/avatar.jpg" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">Rex</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">记录模型产出、实验过程与协作结果</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">时间轴</a></li>
+                        
+                            <li><a href="/tags/">标签</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa GitHub" target="_blank" rel="noopener" href="https://github.com/RexWzh" title="GitHub"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa bilibili" target="_blank" rel="noopener" href="https://space.bilibili.com/518870168" title="bilibili"></a>
+                            
+                                <a class="fa 知乎" target="_blank" rel="noopener" href="https://www.zhihu.com/people/wang-zhi-hong-79-21" title="知乎"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/ai/" rel="tag">ai</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/deployment/" rel="tag">deployment</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/design/" rel="tag">design</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/github/" rel="tag">github</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hexo/" rel="tag">hexo</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/workflow/" rel="tag">workflow</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">记录模型产出、实验过程与长期沉淀。</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">Rex</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="https://qiniu.wzhecnu.cn/PicBed5/images_for_blogs/avatar.jpg" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">Rex</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">记录模型产出、实验过程与协作结果</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">时间轴</a></li>
+                
+                    <li><a href="/tags/">标签</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/RexWzh" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa bilibili" target="_blank" href="https://space.bilibili.com/518870168" title="bilibili"></a>
+                            
+                                <a class="fa 知乎" target="_blank" href="https://www.zhihu.com/people/wang-zhi-hong-79-21" title="知乎"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-rexblog-deploy-design-minimal" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2026/04/07/rexblog-deploy-design-minimal/" class="article-date">
+      <time datetime="2026-04-07T17:35:00.000Z" itemprop="datePublished">2026-04-07</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      RexBlog 部署设计：最小可实现方案
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/deployment/" rel="tag">deployment</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/design/" rel="tag">design</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/hexo/" rel="tag">hexo</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/workflow/" rel="tag">workflow</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>这篇文章只讨论一件事：如何给 <code>RexBlog</code> 做一个足够简单、足够安全、并且后面还能继续演进的部署设计。</p>
+<p>这里尽量不凭空设计，而是优先参考官方已经支持的静态站点部署方式。</p>
+<p>参考来源主要是：</p>
+<ul>
+<li>Hexo 官方文档</li>
+<li>GitHub Pages 官方 &#x2F; Hexo 官方 GitHub Pages 指南</li>
+<li>Cloudflare Pages 官方 Hexo 指南</li>
+<li>Netlify 官方仓库部署文档</li>
+</ul>
+<p>目标不是一开始把体系做完整，而是先让这套流程能稳定跑起来。</p>
+<h2 id="先定义边界"><a href="#先定义边界" class="headerlink" title="先定义边界"></a>先定义边界</h2><p>这里有两个动作，必须分开：</p>
+<ul>
+<li><code>git push</code>：同步源码仓库</li>
+<li><code>hexo d</code>：部署构建后的静态站点</li>
+</ul>
+<p>这两个动作虽然都可能发生在“发布”附近，但语义不同。</p>
+<p><code>git push</code> 解决的是内容协作和源码同步。</p>
+<p><code>hexo d</code> 解决的是把当前站点构建结果发布到线上。</p>
+<p>如果这两件事混在一起，后面一旦多机协作、Actions 自动化、服务端接收端同时存在，链路就会越来越难理解。</p>
+<h2 id="先看官方已经支持的最小路线"><a href="#先看官方已经支持的最小路线" class="headerlink" title="先看官方已经支持的最小路线"></a>先看官方已经支持的最小路线</h2><p>基于官方文档，目前最常见、也最通用的路线其实很清楚：</p>
+<h3 id="路线一：GitHub-Pages-GitHub-Actions"><a href="#路线一：GitHub-Pages-GitHub-Actions" class="headerlink" title="路线一：GitHub Pages + GitHub Actions"></a>路线一：GitHub Pages + GitHub Actions</h3><p>这是 Hexo 官方文档直接推荐的方式之一。</p>
+<p>基本流程：</p>
+<ol>
+<li>源码 push 到 GitHub 仓库默认分支</li>
+<li>GitHub Actions 执行 <code>npm run build</code></li>
+<li>将 <code>public/</code> 发布到 GitHub Pages</li>
+</ol>
+<p>优点：</p>
+<ul>
+<li>对 Hexo 最官方</li>
+<li>配置简单</li>
+<li>安全性高，不需要自建服务器</li>
+<li>适合个人博客</li>
+</ul>
+<p>限制：</p>
+<ul>
+<li>网站托管能力受 GitHub Pages 限制</li>
+<li>预览和扩展能力比 Cloudflare Pages 弱一些</li>
+</ul>
+<h3 id="路线二：Cloudflare-Pages-Git-集成"><a href="#路线二：Cloudflare-Pages-Git-集成" class="headerlink" title="路线二：Cloudflare Pages + Git 集成"></a>路线二：Cloudflare Pages + Git 集成</h3><p>Cloudflare 官方对 Hexo 有明确的 framework guide。</p>
+<p>基本流程：</p>
+<ol>
+<li>把 <code>RexBlog</code> 源码推到 GitHub</li>
+<li>Cloudflare Pages 连接 GitHub 仓库</li>
+<li>设置：<ul>
+<li>Production branch: <code>main</code></li>
+<li>Build command: <code>npm run build</code></li>
+<li>Build directory: <code>public</code></li>
+</ul>
+</li>
+<li>每次提交自动构建部署</li>
+<li>Pull Request 自动生成 preview deployment</li>
+</ol>
+<p>优点：</p>
+<ul>
+<li>配置非常少</li>
+<li>默认就适合静态站点</li>
+<li>PR 预览是现成能力</li>
+<li>自定义域名和 CDN 能力很成熟</li>
+<li>不需要自己维护服务器</li>
+</ul>
+<p>限制：</p>
+<ul>
+<li>依赖第三方平台托管</li>
+</ul>
+<h3 id="路线三：Netlify-Git-仓库部署"><a href="#路线三：Netlify-Git-仓库部署" class="headerlink" title="路线三：Netlify + Git 仓库部署"></a>路线三：Netlify + Git 仓库部署</h3><p>Netlify 官方也支持直接从 Git 仓库部署。</p>
+<p>基本流程与 Cloudflare Pages 类似：</p>
+<ol>
+<li>连接 GitHub 仓库</li>
+<li>配置构建命令和发布目录</li>
+<li>平台自动构建和托管静态产物</li>
+</ol>
+<p>优点：</p>
+<ul>
+<li>同样是成熟平台方案</li>
+<li>对静态博客非常友好</li>
+<li>自定义域名、预览、托管能力成熟</li>
+</ul>
+<p>限制：</p>
+<ul>
+<li>对 Hexo 来说，生态心智上没有 GitHub Pages &#x2F; Cloudflare Pages 那么直接</li>
+</ul>
+<h2 id="现在最不该先做的事"><a href="#现在最不该先做的事" class="headerlink" title="现在最不该先做的事"></a>现在最不该先做的事</h2><p>如果目标是“快速实现 + 通用 + 安全”，现在最不该先做的是：</p>
+<ul>
+<li>自建部署 API</li>
+<li>自己处理 token &#x2F; HMAC &#x2F; 重放保护</li>
+<li>自己维护部署服务</li>
+<li>自己维护接收端和队列</li>
+</ul>
+<p>这些事情都不是不能做，而是太早做会明显提高复杂度。</p>
+<p>对于一个 Hexo 静态博客，现成托管平台已经覆盖了最关键的能力：</p>
+<ul>
+<li>自动构建</li>
+<li>自动托管</li>
+<li>自定义域名</li>
+<li>HTTPS</li>
+<li>PR 预览</li>
+<li>GitHub 集成</li>
+</ul>
+<h2 id="最小方案"><a href="#最小方案" class="headerlink" title="最小方案"></a>最小方案</h2><p>我建议当前阶段采用最简单的版本：</p>
+<ol>
+<li>源码仓库使用 <code>RexBlog</code></li>
+<li>主分支使用 <code>main</code></li>
+<li>普通分支和 PR 只做构建校验</li>
+<li>正式托管优先使用 GitHub Pages 或 Cloudflare Pages</li>
+<li>不自建部署接收端</li>
+</ol>
+<p>这个方案里不引入额外的部署服务，不引入复杂的任务编排，也不引入一开始就必须维护的 <code>chattool serve</code> 接收端。</p>
+<h2 id="推荐结论"><a href="#推荐结论" class="headerlink" title="推荐结论"></a>推荐结论</h2><p>如果只考虑“最安全、最通用、最快能做出来”，我建议这样选：</p>
+<h3 id="第一推荐：Cloudflare-Pages"><a href="#第一推荐：Cloudflare-Pages" class="headerlink" title="第一推荐：Cloudflare Pages"></a>第一推荐：Cloudflare Pages</h3><p>原因：</p>
+<ul>
+<li>官方对 Hexo 有直接文档</li>
+<li>接 GitHub 仓库非常直接</li>
+<li><code>main</code> 自动发布</li>
+<li>PR 自动预览</li>
+<li>HTTPS、CDN、自定义域名都现成</li>
+<li>不需要你自己管服务器</li>
+</ul>
+<p>如果你的重点是“把站稳定放出去，并且希望 MR &#x2F; PR 有预览”，Cloudflare Pages 是最省事的。</p>
+<h3 id="第二推荐：GitHub-Pages"><a href="#第二推荐：GitHub-Pages" class="headerlink" title="第二推荐：GitHub Pages"></a>第二推荐：GitHub Pages</h3><p>原因：</p>
+<ul>
+<li>Hexo 官方文档直接支持</li>
+<li>GitHub Actions workflow 有官方示例</li>
+<li>对个人博客最经典</li>
+<li>非常通用</li>
+</ul>
+<p>如果你更想要“全部留在 GitHub 体系里”，GitHub Pages 是最稳的默认方案。</p>
+<h3 id="第三推荐：Netlify"><a href="#第三推荐：Netlify" class="headerlink" title="第三推荐：Netlify"></a>第三推荐：Netlify</h3><p>原因：</p>
+<ul>
+<li>也是成熟静态托管平台</li>
+<li>部署方式和 Cloudflare Pages 类似</li>
+</ul>
+<p>但对当前这个 Hexo 博客来说，我会先优先 Cloudflare Pages 或 GitHub Pages。</p>
+<h2 id="为什么当前不推荐自建接收端"><a href="#为什么当前不推荐自建接收端" class="headerlink" title="为什么当前不推荐自建接收端"></a>为什么当前不推荐自建接收端</h2><p>不是 <code>chattool serve</code> 不好，而是当前阶段没有必要把复杂度抬高。</p>
+<p>如果当前目标只是让博客稳定发布，那么最短路径其实就是：</p>
+<ul>
+<li>源码 push 到 GitHub</li>
+<li>平台自动构建 <code>public/</code></li>
+<li>平台自动 host 网站</li>
+</ul>
+<p>这个链路有几个明显优点：</p>
+<ul>
+<li>官方支持</li>
+<li>配置简单</li>
+<li>安全边界清楚</li>
+<li>维护成本最低</li>
+<li>没有服务器暴露问题</li>
+</ul>
+<p>对于一个静态博客，这通常已经够用了。</p>
+<h2 id="workflow-最小化"><a href="#workflow-最小化" class="headerlink" title="workflow 最小化"></a>workflow 最小化</h2><p>当前阶段 workflow 也不需要做复杂。</p>
+<h3 id="普通分支-push"><a href="#普通分支-push" class="headerlink" title="普通分支 push"></a>普通分支 push</h3><ul>
+<li>只做构建检查</li>
+<li>不正式发布</li>
+</ul>
+<h3 id="PR-MR"><a href="#PR-MR" class="headerlink" title="PR &#x2F; MR"></a>PR &#x2F; MR</h3><ul>
+<li>做构建检查</li>
+<li>如果平台支持，就自动给预览地址</li>
+</ul>
+<h3 id="合并到-main"><a href="#合并到-main" class="headerlink" title="合并到 main"></a>合并到 <code>main</code></h3><ul>
+<li>自动触发正式构建</li>
+<li>自动发布到托管平台</li>
+</ul>
+<h2 id="本地怎么用"><a href="#本地怎么用" class="headerlink" title="本地怎么用"></a>本地怎么用</h2><p>本地继续保留简单用法：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">hexo cl</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
+
+<p>发布不再优先依赖本地 <code>hexo d</code>，而是优先依赖 Git 平台触发：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m <span class="string">&quot;...&quot;</span></span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
+
+<p>也就是说：</p>
+<ul>
+<li>本地负责写内容和预览</li>
+<li>GitHub 负责同步源码</li>
+<li>托管平台负责构建和 host 网站</li>
+</ul>
+<p>这是当前最省心的方式。</p>
+<h2 id="hexo-d-还要不要保留"><a href="#hexo-d-还要不要保留" class="headerlink" title="hexo d 还要不要保留"></a><code>hexo d</code> 还要不要保留</h2><p>可以保留，但不应该是第一优先。</p>
+<p>原因很简单：</p>
+<ul>
+<li>现成托管平台已经能从源码仓库自动 build 和部署</li>
+<li>继续依赖本地 <code>hexo d</code>，会让“本地发布”和“平台自动发布”变成两套路径</li>
+</ul>
+<p>如果当前目标是减少概念和减少维护，我更建议：</p>
+<ul>
+<li>先把正式发布统一收敛到平台自动部署</li>
+<li><code>hexo d</code> 暂时不作为主路径</li>
+</ul>
+<p>后面如果你确实需要“本地一键发布构建产物”，再重新引入 <code>hexo-deployer-git</code> 也不晚。</p>
+<h2 id="第二阶段再考虑什么"><a href="#第二阶段再考虑什么" class="headerlink" title="第二阶段再考虑什么"></a>第二阶段再考虑什么</h2><p>等下面这些需求真的出现时，再引入 <code>chattool serve</code> 更合适：</p>
+<ul>
+<li>不止部署博客，还部署多个模型生成站点</li>
+<li>需要统一接入部署日志和回滚</li>
+<li>需要统一鉴权和部署队列</li>
+<li>需要服务端接收层，而不是完全依赖第三方托管平台</li>
+</ul>
+<p>那时 <code>chattool serve</code> 才真正有必要。</p>
+<h2 id="当前推荐的最终方案"><a href="#当前推荐的最终方案" class="headerlink" title="当前推荐的最终方案"></a>当前推荐的最终方案</h2><p>如果只考虑“现在就能做、最安全、最通用、最少设计”，我推荐：</p>
+<ol>
+<li>源码仓库继续放在 GitHub</li>
+<li>正式托管优先选 Cloudflare Pages 或 GitHub Pages</li>
+<li>普通分支和 PR 只做构建检查</li>
+<li><code>main</code> 负责正式发布</li>
+<li>暂不自建 <code>chattool serve</code> 接收端</li>
+</ol>
+<p>如果你问我只选一个，我会推荐：</p>
+<ol>
+<li>需要 PR 预览和更强托管体验：<code>Cloudflare Pages</code></li>
+<li>需要最经典、最官方、最少心智负担：<code>GitHub Pages</code></li>
+</ol>
+<p>这就是当前阶段最小、最安全、最通用的方案。</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2026/04/07/rexblog-deploy-design-minimal/">RexBlog 部署设计：最小可实现方案</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">Rex</a></p>
+        <p><span>发布时间:</span>2026-04-07, 17:35:00</p>
+        <p><span>最后更新:</span>2026-05-06, 21:47:33</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2026/04/07/rexblog-deploy-design-minimal/" title="RexBlog 部署设计：最小可实现方案">http://www.wzhecnu.cn/2026/04/07/rexblog-deploy-design-minimal/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://www.wzhecnu.cn/2026/04/07/rexblog-deploy-design-minimal/　　作者: Rex" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license noopener" target="_blank" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2026/05/06/hello-world/">
+                    Hello World
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2026/04/07/model-output-deploy-workflow/">
+                    AI 试炼场的多机协作与部署思路
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%88%E5%AE%9A%E4%B9%89%E8%BE%B9%E7%95%8C"><span class="toc-number">1.</span> <span class="toc-text">先定义边界</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%88%E7%9C%8B%E5%AE%98%E6%96%B9%E5%B7%B2%E7%BB%8F%E6%94%AF%E6%8C%81%E7%9A%84%E6%9C%80%E5%B0%8F%E8%B7%AF%E7%BA%BF"><span class="toc-number">2.</span> <span class="toc-text">先看官方已经支持的最小路线</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B7%AF%E7%BA%BF%E4%B8%80%EF%BC%9AGitHub-Pages-GitHub-Actions"><span class="toc-number">2.1.</span> <span class="toc-text">路线一：GitHub Pages + GitHub Actions</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B7%AF%E7%BA%BF%E4%BA%8C%EF%BC%9ACloudflare-Pages-Git-%E9%9B%86%E6%88%90"><span class="toc-number">2.2.</span> <span class="toc-text">路线二：Cloudflare Pages + Git 集成</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B7%AF%E7%BA%BF%E4%B8%89%EF%BC%9ANetlify-Git-%E4%BB%93%E5%BA%93%E9%83%A8%E7%BD%B2"><span class="toc-number">2.3.</span> <span class="toc-text">路线三：Netlify + Git 仓库部署</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8E%B0%E5%9C%A8%E6%9C%80%E4%B8%8D%E8%AF%A5%E5%85%88%E5%81%9A%E7%9A%84%E4%BA%8B"><span class="toc-number">3.</span> <span class="toc-text">现在最不该先做的事</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%80%E5%B0%8F%E6%96%B9%E6%A1%88"><span class="toc-number">4.</span> <span class="toc-text">最小方案</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A8%E8%8D%90%E7%BB%93%E8%AE%BA"><span class="toc-number">5.</span> <span class="toc-text">推荐结论</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%8E%A8%E8%8D%90%EF%BC%9ACloudflare-Pages"><span class="toc-number">5.1.</span> <span class="toc-text">第一推荐：Cloudflare Pages</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E6%8E%A8%E8%8D%90%EF%BC%9AGitHub-Pages"><span class="toc-number">5.2.</span> <span class="toc-text">第二推荐：GitHub Pages</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E6%8E%A8%E8%8D%90%EF%BC%9ANetlify"><span class="toc-number">5.3.</span> <span class="toc-text">第三推荐：Netlify</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BD%93%E5%89%8D%E4%B8%8D%E6%8E%A8%E8%8D%90%E8%87%AA%E5%BB%BA%E6%8E%A5%E6%94%B6%E7%AB%AF"><span class="toc-number">6.</span> <span class="toc-text">为什么当前不推荐自建接收端</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#workflow-%E6%9C%80%E5%B0%8F%E5%8C%96"><span class="toc-number">7.</span> <span class="toc-text">workflow 最小化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%99%AE%E9%80%9A%E5%88%86%E6%94%AF-push"><span class="toc-number">7.1.</span> <span class="toc-text">普通分支 push</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#PR-MR"><span class="toc-number">7.2.</span> <span class="toc-text">PR &#x2F; MR</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%90%88%E5%B9%B6%E5%88%B0-main"><span class="toc-number">7.3.</span> <span class="toc-text">合并到 main</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%AC%E5%9C%B0%E6%80%8E%E4%B9%88%E7%94%A8"><span class="toc-number">8.</span> <span class="toc-text">本地怎么用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#hexo-d-%E8%BF%98%E8%A6%81%E4%B8%8D%E8%A6%81%E4%BF%9D%E7%95%99"><span class="toc-number">9.</span> <span class="toc-text">hexo d 还要不要保留</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E9%98%B6%E6%AE%B5%E5%86%8D%E8%80%83%E8%99%91%E4%BB%80%E4%B9%88"><span class="toc-number">10.</span> <span class="toc-text">第二阶段再考虑什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BD%93%E5%89%8D%E6%8E%A8%E8%8D%90%E7%9A%84%E6%9C%80%E7%BB%88%E6%96%B9%E6%A1%88"><span class="toc-number">11.</span> <span class="toc-text">当前推荐的最终方案</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"RexBlog 部署设计：最小可实现方案　| AI 试炼场　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2026/05/06/hello-world/" title="上一篇: Hello World">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2026/04/07/model-output-deploy-workflow/" title="下一篇: AI 试炼场的多机协作与部署思路">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2026/05/06/hello-world/">Hello World</a></li><li class="post-list-item"><a class="post-list-link" href="/2026/04/07/rexblog-deploy-design-minimal/">RexBlog 部署设计：最小可实现方案</a></li><li class="post-list-item"><a class="post-list-link" href="/2026/04/07/model-output-deploy-workflow/">AI 试炼场的多机协作与部署思路</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2020-2026 Rex
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="https://cdn.jsdelivr.net/npm/requirejs@2.3.7/require.min.js"></script>
+
+
+
+
+
+    <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+             post: ".article-entry a[href], .copyright a[href]", 
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
